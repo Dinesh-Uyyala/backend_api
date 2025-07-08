@@ -85,12 +85,12 @@ app.get('/users/:id', (req, res) => {
 // Create a new user
 app.post('/users', (req, res) => {
   const { name, email,mobile,password} = req.body;
-  db.query('INSERT INTO users (name, email,mobile,password,roleId) VALUES (?, ?,?,?, ?)', [name, email,mobile,password, 1], (err, results) => {
+  db.query('INSERT INTO users (name, email,mobile,password) VALUES (?, ?,?,?)', [name, email,mobile,password], (err, results) => {
     if (err) {
       console.error('Error creating user:', err);
       return res.status(500).json({ error: 'Internal Server Error' });
     }
-    res.status(201).json({ id: results.insertId, name, email,mobile,password, roleId: 1 });
+    res.status(201).json({ id: results.insertId, name, email,mobile,password });
   });
 });
 
@@ -140,7 +140,7 @@ app.delete('/users/:id', (req, res) => {
 // login
 app.post('/users/login', (req, res) => {
   const { email, password } = req.body;
-  db.query('SELECT id,name,email,mobile,roleId FROM users WHERE email = ? AND password = ?', [email, password], (err, results) => {
+  db.query('SELECT id,name,email,mobile FROM users WHERE email = ? AND password = ?', [email, password], (err, results) => {
     if (err) {
       console.error('Error logging in:', err);
       return res.status(500).json({ error: 'Internal Server Error' });
