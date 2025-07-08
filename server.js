@@ -2,11 +2,15 @@ const express = require('express');
 const mysql = require('mysql2');
 require('dotenv').config();
 const cors = require('cors');
-const e = require('express');
+const bodyParser = require('body-parser');
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON bodies
+const upload = multer({ storage: multer.memoryStorage() }); // Store in memory buffer
+app.use(express.json());
 const port = process.env.PORT || 3000;
 
 // MySQL connection
@@ -31,9 +35,30 @@ res.send('Hello World!');
 console.log("Welcome to the server!");
 });
 
+// File Upload
+app.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    const fileBuffer = req.file.buffer;
+    const base64String = fileBuffer.toString('base64');
+    const fileName = req.file.originalname;
+
+    const connection = await pool.getConnection();
+    await connection.execute(
+      'INSERT INTO uploads (file_name, base64_data) VALUES (?, ?)',
+      [fileName, base64String]
+    );
+    connection.release();
+
+    res.status(200).json({ message: 'File uploaded successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Upload failed' });
+  }
+});
+
 // Get all users
 app.get('/users', (req, res) => {
-  db.query('SELECT id,name,email,mobile,roleId FROM users', (err, results) => {
+  db.query('SELECT id,name,email,mobile FROM users', (err, results) => {
     if (err) {
       console.error('Error fetching users:', err);
       return res.status(500).json({ error: 'Internal Server Error' });
